@@ -1,0 +1,641 @@
+// *****************
+// Name: Adam Stansell
+// UNI: as4131
+// Class Name: Game
+// This class is the class in which the game of BlackJack
+// is actually played
+// ******************
+
+import java.util.Scanner;
+
+public class Game 
+{
+
+    // initializes the instance variables
+    
+    // sets the dealer strategy
+    private final static int DEALER_THRESHOLD = 17;
+    
+    // declares all the instance variables for the user
+    private Player user;
+    private int userTotal;
+    private boolean userBust;
+    private double bet;
+    private int userAces;
+    private boolean userBlackJack;
+    private boolean split;
+    
+    // declares variables for split hands
+    private Player hand1;
+    private double hand1Bet;
+    private int hand1Total;
+    private boolean hand1Bust;
+    private int hand1Aces;
+    
+    private Player hand2;
+    private double hand2Bet;
+    private int hand2Total;
+    private boolean hand2Bust;
+    private int hand2Aces;
+    
+    // declares all the instance variables for the dealer
+    private Dealer dealer;
+    private int dealerTotal;
+    private boolean dealerBust;
+    private int dealerAces;
+    
+    // declares other variables
+    private Deck newDeck;
+    private Scanner scan;
+    
+    // declares the initial hands
+    private Card pCard1;
+    private Card pCard2;
+    private Card dCard1;
+    private Card dCard2;
+    
+    public Game(double buyIn)
+    {
+        
+        // initializes all instance variables
+        
+        // initializes player variables
+        user = new Player(buyIn);
+        userTotal = 0;
+        userBust = false;
+        bet = 0;
+        userAces = 0;
+        userBlackJack = false;
+        split = false;
+        
+        // initializes split hand variables
+        hand1 = new Player(0);
+        hand1Bet = 0;
+        hand1Total = 0;
+        hand1Bust = false;
+        hand1Aces = 0;
+        
+        hand2 = new Player(0);
+        hand2Bet = 0;
+        hand2Total = 0;
+        hand2Bust = false;
+        hand2Aces = 0;
+        
+        // initializes dealer variables
+        dealer = new Dealer();
+        dealerTotal = 0;
+        dealerBust = false;
+        dealerAces = 0;
+        
+        // initializes other variables
+        scan = new Scanner(System.in);
+        newDeck = new Deck();
+        newDeck.shuffle(); // shuffles deck upon initialization
+        
+        // initializes initial hands to null
+        pCard1 = null;
+        pCard2 = null;
+        dCard1 = null;
+        dCard2 = null;
+        
+    }
+    
+    public void playGame()
+    {
+        
+        // plays a hand of BlackJack
+        
+        // resets all the necessary variables
+        resetVariables();
+        
+        // checks to see whether to shuffle deck at beginning of game
+        newDeck.checkShuffle();
+        
+        getBet(); // gets player bet
+        
+        dealCards(); // deals out initial hands
+        
+        checkBlackJack(); // checks to see if user has BlackJack
+        
+        checkSplit();
+            
+        if (!userBlackJack && !split) // if the user doesn't have BlackJack
+        {
+            doubleDown(); // lets player double down if desired
+        
+            playerMove(); // gets player move
+        
+            if(!userBust) // checks to make sure player didn't bust
+                dealerMove(); // gets dealer move
+        }
+        
+        if (!split)
+            checkWinner(); // checks to see who won, in a no-split game
+
+    }
+    
+    private void dealCards()
+    {
+        
+        // deals new cards, and checks to see if their aces
+        pCard1 = newDeck.deal();
+        checkPlayerAce(pCard1);
+        
+        dCard1 = newDeck.deal();
+        checkDealerAce(dCard1);
+        
+        pCard2 = newDeck.deal();
+        checkPlayerAce(pCard2);
+        
+        dCard2 = newDeck.deal();
+        checkDealerAce(dCard2);
+        
+        // prints dealt cards that user is allowed to see
+        userTotal = user.returnTotal(pCard1, pCard2);
+        checkPairAces();// adjusts for aces if user receives a pair
+        System.out.print("You have " + pCard1 + ", and " + pCard2);
+        System.out.println(". Your total is " + userTotal);
+        System.out.println("The dealer's first card is " + dCard1);
+    }
+    
+    private void playerMove()
+    {
+        
+        // gets player move
+        boolean stand = false;
+        
+        while (!stand && !userBust) // if the user hasn't stood or busted yet
+        {
+            // determines if user wants another card
+            System.out.println("You have " + userTotal);
+            System.out.println("Would you like to hit or stand? ( h / s )");
+            if (scan.next().equalsIgnoreCase("s"))
+                stand = true; // if the user decides to stand
+            else
+            {
+                newPlayerCard(); // gets a new card
+            }
+        }
+    }
+    
+    private void dealerMove()
+    {
+        dealerTotal = dealer.returnTotal(dCard1, dCard2);
+        System.out.println("The dealer's hole card is " + dCard2);
+        
+        while (dealerTotal < DEALER_THRESHOLD && !dealerBust)
+        {
+            // gets new card and checks if it's an Ace
+            Card newCard = newDeck.deal();
+            checkDealerAce(newCard);
+            
+            System.out.println("The dealer draws " + newCard);
+            dealerTotal = dealer.newTotal(newCard);
+            if (dealerTotal > 21)
+            {
+                // changes value of Ace if dealer has one
+                if (dealerAces > 0)
+                {
+                    dealerTotal = dealer.ace();
+                    dealerAces --;
+                }
+                // if not dealer busts
+                else
+                    dealerBust = true;
+            }
+        }
+        if (dealerBust)
+            System.out.println("Dealer busts");
+        else    
+            System.out.println("Dealer's final total is " + dealerTotal);
+    }
+    
+    private void checkPairAces()
+    {
+        if (userTotal == 22) // checks to see if user got two aces
+        {
+            userTotal = 12;
+            userAces--;
+        }
+    }
+    
+    private void checkWinner()
+    {
+        
+        // if the player doesn't bust and has more than the dealer
+        // or the dealer busts, the player wins
+        if (((dealerTotal < userTotal) && (!userBust)) || dealerBust)
+        {
+            System.out.println("You win!");
+            user.addBalance(bet);
+        }
+        
+        // if the dealer has more than the player and doesn't bust
+        // or the player busts, the dealer wins
+        if ((dealerTotal > userTotal && !dealerBust) || userBust)
+        {
+            System.out.println("You lose");
+            user.subtractBalance(bet);
+        }
+
+        // if they have the same total, it's a tie, and nobody wins
+        if (dealerTotal == userTotal)
+            System.out.println("It's a tie");
+        
+        // returns user balance
+        System.out.println("Your balance is: " + user.returnBalance());
+    }
+    
+    private void getBet()
+    {
+        
+        // gets the value of the users bet
+        System.out.print("Please enter your bet for this hand. ");
+        System.out.println("You must bet between 10.00 and 1000.00.");
+        
+        // makes sure bet is in the appropriate range
+        boolean appropriateBet = false;
+        while (!appropriateBet)
+        {
+            if (scan.hasNextDouble())
+            {
+                bet = scan.nextDouble();
+                if (bet >= 10.00 && bet <= 1000.00)
+                    appropriateBet = true;
+            }
+            
+            // asks user again if bet isn't appropriate
+            if (!appropriateBet)
+            {
+                System.out.print("Please enter a numerical value between ");
+                System.out.println("10.00 and 1000.00");
+            }
+        }
+
+    }
+    
+    private void doubleDown()
+    {
+        
+        // doubles the users bet if they choose to
+        System.out.println("Would you like to double down on this hand? y / n");
+        if (scan.next().equalsIgnoreCase("y"))
+        {
+            System.out.print("Enter the percentage you would like to increase");
+            System.out.print(" your bet by. This number must be a decimal ");
+            System.out.println("less than or equal to 1.");
+            boolean appropriatePercentage = false;
+            while(!appropriatePercentage)
+            {
+                if(scan.hasNextDouble())
+                {
+                    double percentage = scan.nextDouble();
+                    if (percentage <= 1)
+                    {
+                        bet = bet + (percentage * bet);
+                        appropriatePercentage = true;
+                    }
+                }
+                if(!appropriatePercentage)
+                    System.out.println("Please enter a decimal less than 1");
+            }
+        }
+    }
+    
+    private void newPlayerCard()
+    {
+        
+        // gets a new card for the user
+        
+        Card newCard = newDeck.deal(); // gets new card
+        checkPlayerAce(newCard); // checks to see if its an ace
+        
+        System.out.println("You got " + newCard); // tells user new card
+        userTotal = user.newTotal(newCard); // calculates total with new card
+        
+        if (userTotal > 21)
+        {
+            // changes value of Ace if user has one, and total is over 21
+            if (userAces > 0)
+            {
+                userTotal = user.ace();
+                userAces --;
+            }
+            
+            // if user doesn't have an Ace, they bust
+            else
+            {
+                System.out.println("You bust");
+                userBust = true;
+            }
+        }
+    }
+    
+    private void checkPlayerAce(Card card)
+    {
+        // increases value of user aces if they have one in their hand
+        if (card.value() == 11)
+            userAces++;
+    }
+    
+    private void checkDealerAce(Card card)
+    {
+        // increases value of dealer aces if they have one in their hand
+        if (card.value() == 11)
+            dealerAces++;
+    }
+    
+    private void checkBlackJack()
+    {
+        // checks to see if user has BlackJack and dealer doesn't
+        if (user.blackJack() && !dealer.blackJack())
+        {
+            userBlackJack = true;
+            bet = 1.5 * bet;
+        }
+    }
+    
+    private void resetVariables()
+    {
+        // resets all necessary variables
+        userBlackJack = false;
+        userAces = 0;
+        dealerAces = 0;
+        userBust = false;
+        dealerBust = false;
+        userTotal = 0;
+        dealerTotal = 0;
+        split = false;
+    }
+    
+    private void checkSplit()
+    {
+        // checks to see if the user is allowed to split
+        if (pCard1.value() == pCard2.value())
+        {
+            
+            // allows the user to split their hand
+            System.out.println("Would you like to split your hand? y / n");
+            if (scan.next().equalsIgnoreCase("y"))
+            {
+                split = true;
+                split();
+            }
+        }
+    }
+    
+    private void split()
+    {
+        splitHand1(); // plays the first split hand
+        splitHand2(); // plays the second split hand
+        if(!hand1Bust || !hand2Bust)
+            dealerMove();
+        checkSplitWinner();
+    }
+    
+    private void splitHand1()
+    {
+        
+        // creates new hand
+        Card newCard1 = newDeck.deal();
+        hand1Total = hand1.returnTotal(pCard1, newCard1);
+        System.out.print("Your next card in your first hand is ");
+        System.out.println(newCard1);
+        System.out.println("You have " + hand1Total);
+
+        hand1Bet = bet;
+        hand1DoubleDown();
+
+        checkHand1Ace(pCard1);
+        checkHand1Ace(newCard1);
+        playSplitHand1();
+    }
+    
+    private void checkHand1Ace(Card card)
+    {
+        if (card.value() == 11)
+            hand1Aces++;
+    }
+    
+    private void hand1DoubleDown()
+    {
+        
+        // doubles the users bet if they choose to
+        System.out.print("Would you like to double down on your first hand?");
+        System.out.println(" y / n");
+        if (scan.next().equalsIgnoreCase("y"))
+        {
+            System.out.print("Enter the percentage you would like to increase");
+            System.out.print(" your bet by. This number must be a decimal ");
+            System.out.println("less than or equal to 1.");
+            boolean appropriatePercentage = false;
+            while(!appropriatePercentage)
+            {
+                if(scan.hasNextDouble())
+                {
+                    double percentage = scan.nextDouble();
+                    if (percentage <= 1)
+                    {
+                        hand1Bet = hand1Bet + (percentage * hand1Bet);
+                        appropriatePercentage = true;
+                    }
+                }
+                if(!appropriatePercentage)
+                {
+                    System.out.print("Please enter a decimal less than or ");
+                    System.out.println("equal to 1.");
+                }
+            }
+        }
+    }
+    
+    private void playSplitHand1()
+    {   
+        
+        // gets player move
+        boolean stand = false;
+        
+        while (!stand && !hand1Bust) // if the user hasn't stood or busted yet
+        {
+            // determines if user wants another card
+            System.out.println("You have " + hand1Total);
+            System.out.println("Would you like to hit or stand? ( h / s )");
+            if (scan.next().equalsIgnoreCase("s"))
+                stand = true; // if the user decides to stand
+            else
+            {
+                newHand1Card(); // gets a new card
+            }
+        }
+    }
+    
+    private void newHand1Card()
+    {
+        
+        // gets a new card for the user
+        
+        Card newCard = newDeck.deal(); // gets new card
+        checkHand1Ace(newCard); // checks to see if its an ace
+        
+        System.out.println("You got " + newCard); // tells user new card
+        hand1Total = hand1.newTotal(newCard); // calculates total with new card
+        
+        if (hand1Total > 21)
+        {
+            // changes value of Ace if user has one, and total is over 21
+            if (hand1Aces > 0)
+            {
+                hand1Total = hand1.ace();
+                hand1Aces --;
+            }
+            
+            // if user doesn't have an Ace, they bust
+            else
+            {
+                System.out.println("You bust");
+                hand1Bust = true;
+            }
+        }
+    }
+
+    private void splitHand2()
+    {
+        
+        // creates new hand
+        Card newCard1 = newDeck.deal();
+        hand2Total = hand2.returnTotal(pCard2, newCard1);
+        System.out.print("Your next card in your second hand is ");
+        System.out.println(newCard1);
+        System.out.println("You have " + hand2Total);
+
+        hand2Bet = bet;
+        hand2DoubleDown();
+
+        checkHand2Ace(pCard2);
+        checkHand2Ace(newCard1);
+        playSplitHand2();
+    }
+    
+    private void checkHand2Ace(Card card)
+    {
+        if (card.value() == 11)
+            hand2Aces++;
+    }
+    
+    private void hand2DoubleDown()
+    {
+        
+        // doubles the users bet if they choose to
+        System.out.print("Would you like to double down on your second hand?");
+        System.out.println(" y / n");
+        if (scan.next().equalsIgnoreCase("y"))
+        {
+            System.out.print("Enter the percentage you would like to increase");
+            System.out.print(" your bet by. This number must be a decimal ");
+            System.out.println("less than or equal to 1.");
+            boolean appropriatePercentage = false;
+            while(!appropriatePercentage)
+            {
+                if(scan.hasNextDouble())
+                {
+                    double percentage = scan.nextDouble();
+                    if (percentage <= 1)
+                    {
+                        hand2Bet = hand2Bet + (percentage * hand2Bet);
+                        appropriatePercentage = true;
+                    }
+                }
+                if(!appropriatePercentage)
+                {
+                    System.out.print("Please enter a decimal less than or ");
+                    System.out.println("equal to 1.");
+                }
+            }
+        }
+    }
+    
+    private void playSplitHand2()
+    {   
+        
+        // gets player move
+        boolean stand = false;
+        
+        while (!stand && !hand2Bust) // if the user hasn't stood or busted yet
+        {
+            // determines if user wants another card
+            System.out.println("You have " + hand2Total);
+            System.out.println("Would you like to hit or stand? ( h / s )");
+            if (scan.next().equalsIgnoreCase("s"))
+                stand = true; // if the user decides to stand
+            else
+            {
+                newHand2Card(); // gets a new card
+            }
+        }
+    }
+    
+    private void newHand2Card()
+    {
+        
+        // gets a new card for the user
+        
+        Card newCard = newDeck.deal(); // gets new card
+        checkHand2Ace(newCard); // checks to see if its an ace
+        
+        System.out.println("You got " + newCard); // tells user new card
+        hand2Total = hand2.newTotal(newCard); // calculates total with new card
+        
+        if (hand2Total > 21)
+        {
+            // changes value of Ace if user has one, and total is over 21
+            if (hand2Aces > 0)
+            {
+                hand2Total = hand2.ace();
+                hand2Aces --;
+            }
+            
+            // if user doesn't have an Ace, they bust
+            else
+            {
+                System.out.println("You bust");
+                hand2Bust = true;
+            }
+        }
+    }
+    
+    private void checkSplitWinner()
+    {
+
+        // determines who wins
+        
+        if(hand1Bust || ((dealerTotal > hand1Total) && !dealerBust))
+        {
+            hand1Bet = hand1Bet * (-1);
+            System.out.println("Your first hand loses");
+        }
+        if(hand1Total == dealerTotal)
+        {
+            hand1Bet = 0;
+            System.out.println("Your first hand is a tie");
+        }
+        if(hand1Bet > 0)
+            System.out.println("Your first hand wins!");
+        
+        if(hand2Bust || ((dealerTotal > hand2Total) && !dealerBust))
+        {
+            hand2Bet = hand2Bet * (-1);
+            System.out.println("Your second hand loses");
+        }
+        if(hand2Total == dealerTotal)
+        {
+            hand2Bet = 0;
+            System.out.println("Your second hand is a tie");
+        }
+        if(hand2Bet > 0)
+            System.out.println("Your second hand wins!");
+        
+        bet = hand1Bet + hand2Bet;
+        user.addBalance(bet);
+        System.out.println("Your new balance is " + user.returnBalance());
+    }
+}
