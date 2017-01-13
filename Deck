@@ -1,0 +1,67 @@
+// *****************
+// Name: Adam Stansell
+// UNI: as4131
+// Class Name: Deck
+// This class allows users to create a full deck of cards
+// ******************
+
+public class Deck 
+{
+
+    // declares instance variables
+    private int topCard;
+    private Card[] deck;
+    
+    public Deck()
+    {
+        
+        // initializes instance variables
+        
+        // initializes deck to start at first card
+        topCard = 0;
+        
+        // creates full deck of cards
+        deck = new Card[52];
+        for (int i = 0; i < deck.length; i++)
+        {
+            if (i < 13)
+                deck[i] = new Card(0,i);
+            if (i >= 13 && i < 26)
+                deck[i] = new Card(1,(i - 13));
+            if (i >= 26 && i <39)
+                deck[i] = new Card(2,(i - 26));
+            if (i >= 39)
+                deck[i] = new Card(3,(i - 39));
+            
+        }
+    }
+    
+    public Card deal()
+    {
+        // returns the "top card" of the deck for use by another class
+        topCard++;
+        return deck[(topCard - 1)];
+    }
+    
+    public void shuffle()
+    {
+        // shuffles the cards in the deck
+        for (int i=0; i<deck.length; i++) 
+        {
+            int randomPosition = (int) (Math.random() * 52);
+            Card temp = deck[i];
+            deck[i] = deck[randomPosition];
+            deck[randomPosition] = temp;
+        }
+    }
+    
+    public void checkShuffle()
+    {
+        // checks to see if the deck needs shuffling, and shuffles it
+        if (topCard > 40)
+        {
+            shuffle();
+            topCard = 0;
+        }
+    }
+}
