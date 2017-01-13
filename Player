@@ -1,0 +1,69 @@
+// *****************
+// Name: Adam Stansell
+// UNI: as4131
+// Class Name: Player
+// This class allows users to create user players for the BlackJack game
+// ******************
+
+public class Player 
+{
+
+    // declares variables to keep track of player total and balance
+    private int handTotal;
+    private double balance;
+    
+    public Player(double buyIn)
+    {
+        // initializes variables
+        handTotal = 0;
+        balance = buyIn;
+    }
+    
+    public int newTotal(Card newCard)
+    {
+        // calculates player total given a new card
+        handTotal += newCard.value();
+        return handTotal;
+    }
+    
+    public int returnTotal(Card pCard1, Card pCard2)
+    {
+        // calculates player total from originally dealt cards
+        handTotal = pCard1.value() + pCard2.value();
+        return handTotal;
+    }
+    
+    public void addBalance(double bet)
+    {
+        // adds to the user's balance if the user wins
+        balance += bet;
+    }
+    
+    public void subtractBalance(double bet)
+    {
+        // subtracts from the user's balance if the user loses
+        balance -= bet;
+    }
+    
+    public double returnBalance()
+    {
+        // returns the balance
+        return balance;
+    }
+    
+    public boolean blackJack()
+    {
+        // determines if the user has BlackJack
+        boolean blackJack = false;
+        if (handTotal == 21)
+            blackJack = true;
+        return blackJack;
+    }
+    
+    public int ace()
+    {
+        // if player has an ace, changes value of ace
+        handTotal -= 10;
+        return handTotal;
+    }
+}
