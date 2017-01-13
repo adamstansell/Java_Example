@@ -1,0 +1,82 @@
+// *****************
+// Name: Adam Stansell
+// UNI: as4131
+// Class Name: Card
+// This class allows users to create objects of the Card type
+// ******************
+
+public class Card 
+{
+    
+    // declares instance variables
+    private String suit;
+    private int cardNumber;
+    private String cardName;
+    private int value;
+    
+    public Card(int suitGiven, int cardNumberGiven)
+    {
+
+        // initializes instance variables
+        
+        // initializes suits
+        if (suitGiven == 0)
+            suit = "Spades";
+        if (suitGiven == 1)
+            suit = "Clubs";
+        if (suitGiven == 2)
+            suit = "Diamonds";
+        if (suitGiven == 3)
+            suit = "Hearts";
+    
+        cardNumber = cardNumberGiven;
+    
+        // initializes BlackJack values of cards
+        if (cardNumber < 10)
+            value = cardNumber + 1;
+        if (cardNumber >= 10)
+            value = 10;
+        if (cardNumber == 0) // if the card is an Ace
+            value = 11; // originally initializes to 11, can be changed
+    
+        // gives card a name based on initialization parameter
+        if (cardNumber == 0)
+            cardName = "an Ace";
+        if (cardNumber == 1)
+            cardName = "a Two";
+        if (cardNumber == 2)
+            cardName = "a Three";
+        if (cardNumber == 3)
+            cardName = "a Four";
+        if (cardNumber == 4)
+            cardName = "a Five";
+        if (cardNumber == 5)
+            cardName = "a Six";
+        if (cardNumber == 6)
+            cardName = "a Seven";
+        if (cardNumber == 7)
+            cardName = "an Eight";
+        if (cardNumber == 8)
+            cardName = "a Nine";
+        if (cardNumber == 9)
+            cardName = "a Ten";
+        if (cardNumber == 10)
+            cardName = "a Jack";
+        if (cardNumber == 11)
+            cardName = "a Queen";
+        if (cardNumber == 12)
+            cardName = "a King";
+    }
+    
+    public int value()
+    {
+        // a method to return the BlackJack value of a card
+        return value;
+    }
+    
+    public String toString()
+    {
+        // a method to return the string representation of a card
+        return cardName + " of " + suit;
+    }
+}
