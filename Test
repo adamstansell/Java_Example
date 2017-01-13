@@ -1,0 +1,54 @@
+// *****************
+// Name: Adam Stansell
+// UNI: as4131
+// Class Name: Test
+// This class allows the user to actually play the BlackJack game
+// ******************
+
+import java.util.Scanner;
+
+public class Test 
+{
+    public static void main(String[] args)
+    {
+        
+        Scanner scan = new Scanner(System.in); // initializes scanner
+        
+        // gets user buy-in
+        boolean appropriateBuyIn = false;
+        double buyIn = 0;
+        System.out.print("Please enter the amount you would like to buy in");
+        System.out.println(" for. You must buy in for at least $100.00.");
+        while (!appropriateBuyIn)
+        {
+            if (scan.hasNextDouble())
+            {
+                buyIn = scan.nextDouble();
+                if (buyIn >= 100.00)
+                    appropriateBuyIn = true;
+            }
+            
+            // if buy-in isn't appropriate amount, asks again
+            if (!appropriateBuyIn)
+            {
+                System.out.print("Please enter a numerical value greater ");
+                System.out.println("than 100");
+            }
+        }
+        
+        Game game = new Game(buyIn); // creates game
+        
+        // plays game as long as user wants to keep playing
+        boolean again = true;
+        while (again)
+        {
+            game.playGame();
+            System.out.print("Do you want to play again?");
+            System.out.println("  y / n");
+            if (scan.next().equalsIgnoreCase("n"))
+                again = false;
+        }
+        
+        System.out.println("Thank you for playing BlackJack");
+    }
+}
