@@ -1,0 +1,49 @@
+// *****************
+// Name: Adam Stansell
+// UNI: as4131
+// Class Name: Dealer
+// This class allows users to create a Dealer player for the BlackJack game
+// ******************
+
+public class Dealer 
+{
+
+    // declares variable to keep track of dealer total
+    private int handTotal;
+    
+    public Dealer()
+    {
+        // initializes dealer total to 0
+        handTotal = 0;
+    }
+    
+    public int newTotal(Card newCard)
+    {
+        // calculates dealer total when given a new card
+        handTotal += newCard.value();
+        return handTotal;
+    }
+    
+    public int returnTotal(Card dCard1, Card dCard2)
+    {
+        // calculates dealer total based on original cards
+        handTotal = dCard1.value() + dCard2.value();
+        return handTotal;
+    }
+
+    public boolean blackJack()
+    {
+        // determines if dealer has BlackJack
+        boolean blackJack = false;
+        if (handTotal == 21)
+            blackJack = true;
+        return blackJack;
+    }
+
+    public int ace()
+    {
+        // if dealer has an ace, changes value of hand
+        handTotal -= 10;
+        return handTotal;
+    }
+}
